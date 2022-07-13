@@ -8,7 +8,7 @@ zff = 0.01;
 // How many facets on the circles.
 $fn = 32;
 // Length of body
-body_length = 300;
+body_length = 200;
 // Height of body
 body_height = 30;
 // The thickness of each layer of the body's plywood
@@ -17,15 +17,13 @@ body_ply_thickness = 3;
 body_layers = 5;
 // The overall thickness of the body.
 body_thickness = body_ply_thickness * body_layers;
-// This is the clearance around trigger mechanism and sear.
-sear_clearance = 0.5;
 
 // Radius of the bolt fired from this crossbow
 bolt_r = 2;
 // This is the depth of the groove in the top of the body that guides the bolt when fired.
 bolt_groove_depth = bolt_r;
 // This is the length of the bolt.
-bolt_length = 150;
+bolt_length = 100;
 
 // The radius of the cord.
 cord_r = 1;
@@ -37,13 +35,15 @@ sear_trigger_notch = 3;
 sear_trigger_angle = 25;
 // The radius of the shaft through the sear.
 sear_shaft_r = 1.5;
+// This is the clearance between the sear and the body
+sear_body_clearance = 0.5;
 
 // The number of layers of plywood forming the bow.
 bow_layers = 3;
 // The thickness of each layer of plywood forming the bow.
 bow_ply_thickness = 3;
 // The left-to-right length of the bow when assembled.
-bow_length = 300;
+bow_length = 200;
 // The height of the bow.
 bow_height = 15;
 // The reduction in length of each layer of the bow as a proportion of the length,
@@ -95,7 +95,8 @@ module sear() {
         // TODO add hole to engage with return spring.
     }
 }
-
+mechanism_cutout_x = 60;
+mechanism_cutout_y = body_height;
 // This is the body of the crossbow. It contains the trigger arm and the sear.
 module body() {
     difference () {
@@ -107,8 +108,6 @@ module body() {
         translate([body_length - bolt_length+zff, body_height-bolt_groove_depth+zff, floor(body_layers/2)*body_ply_thickness])
             cube([bolt_length, bolt_groove_depth, body_ply_thickness]);
         translate(sear_body_offset) union () {
-            // This is a cutout to give clearance for the sear mechanism.
-            cylinder(r=sear_r+sear_clearance, h=body_ply_thickness);
             // This is the shaft for the sear.
             translate([0,0,-50]) cylinder(r=sear_shaft_r, h=100);
             // This is the shaft for the trigger.
@@ -117,15 +116,21 @@ module body() {
                     translate(trigger_shaft_offset)
                         translate([0,0,-50]) cylinder(r=trigger_shaft_r, h=100);
         }
+        // This is the cutout for the sear and trigger mechanism.
+        // The sizing is a bit rough and ready.
+        // TODO make the size of the mechanism cutout a bit more scientific.
+        translate([body_length - bolt_length - mechanism_cutout_x + sear_r+sear_body_clearance, 0, floor(body_layers/2)*body_ply_thickness])
+                cube([mechanism_cutout_x,mechanism_cutout_y,body_ply_thickness]);
+
         // This is the cutout for the bow.
         translate(bow_body_offset)
             translate([-bow_thickness,0,-body_thickness/2]) cube([bow_thickness, bow_height, body_thickness]);
+
 
         // TODO add holes to engage with the springs for the sear and trigger.
         // TODO add the bolt retention/cord guide arm.
     }
 }
-
 // This is used to slice the body into layers to be laser cut.
 module body_slice(layer) {
     projection(true)
@@ -189,6 +194,7 @@ module all_bow_slices() {
 }
 
 // This is all the parts laid out for laser cutting
+// This layout is a bit shambolic.
 module all_slices() {
     all_body_slices();
     translate([0,body_layers * (body_height + laser_clearance)+laser_clearance,0])
@@ -196,6 +202,7 @@ module all_slices() {
     translate([sear_r*2, body_layers * (body_height + laser_clearance)+laser_clearance+sear_r+bow_height,0])
         projection()
             sear();
+    translate([0,body_layers * (body_height + laser_clearance)+bow_layers * (bow_height + laser_clearance)+laser_clearance,0]) projection() trigger();
 }
 
 // This shows all the parts of the crossbow assembled for visual fit checking.
