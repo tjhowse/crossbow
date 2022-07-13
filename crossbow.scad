@@ -18,10 +18,8 @@ body_layers = 5;
 // The overall thickness of the body.
 body_thickness = body_ply_thickness * body_layers;
 
-// Radius of the bolt fired from this crossbow
-bolt_r = 2;
-// This is the depth of the groove in the top of the body that guides the bolt when fired.
-bolt_groove_depth = bolt_r;
+// Radius of the bolt fired from this crossbow. Must be less than half the material thickness of the body.
+bolt_r = body_ply_thickness/2;
 // This is the length of the bolt.
 bolt_length = 100;
 
@@ -95,8 +93,10 @@ module sear() {
         // TODO add hole to engage with return spring.
     }
 }
+
+// This is the length of the cutout section around the trigger and sear mechanism.
 mechanism_cutout_x = 60;
-mechanism_cutout_y = body_height;
+
 // This is the body of the crossbow. It contains the trigger arm and the sear.
 module body() {
     difference () {
@@ -105,8 +105,8 @@ module body() {
             translate([0,0,i*body_ply_thickness]) cube([body_length, body_height, body_ply_thickness]);
         }
         // This is the groove that guides the bolt when fired.
-        translate([body_length - bolt_length+zff, body_height-bolt_groove_depth+zff, floor(body_layers/2)*body_ply_thickness])
-            cube([bolt_length, bolt_groove_depth, body_ply_thickness]);
+        translate([body_length - bolt_length+zff, body_height-bolt_r+zff, floor(body_layers/2)*body_ply_thickness])
+            cube([bolt_length, bolt_r*2, body_ply_thickness]);
         translate(sear_body_offset) union () {
             // This is the shaft for the sear.
             translate([0,0,-50]) cylinder(r=sear_shaft_r, h=100);
@@ -118,18 +118,18 @@ module body() {
         }
         // This is the cutout for the sear and trigger mechanism.
         // The sizing is a bit rough and ready.
-        // TODO make the size of the mechanism cutout a bit more scientific.
+        // TODO make the size of the mechanism cutout a bit more scientific. At a minimum
+        // it should be rotated to match the angle between the sear and trigger shafts such
+        // that the bolt guide arm can mount to the centre slice of the body close to the sear.
         translate([body_length - bolt_length - mechanism_cutout_x + sear_r+sear_body_clearance, 0, floor(body_layers/2)*body_ply_thickness])
-                cube([mechanism_cutout_x,mechanism_cutout_y,body_ply_thickness]);
+                cube([mechanism_cutout_x,body_height,body_ply_thickness]);
 
         // This is the cutout for the bow.
         translate(bow_body_offset)
             translate([-bow_thickness,0,-body_thickness/2]) cube([bow_thickness, bow_height, body_thickness]);
-
-
         // TODO add holes to engage with the springs for the sear and trigger.
-        // TODO add the bolt retention/cord guide arm.
     }
+    // TODO add the bolt retention/cord guide arm.
 }
 // This is used to slice the body into layers to be laser cut.
 module body_slice(layer) {
@@ -218,8 +218,8 @@ module assembled() {
 }
 
 
-// body();
+body();
 // bow();
 
 // all_slices();
-assembled();
+// assembled();
