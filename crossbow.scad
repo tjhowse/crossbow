@@ -45,7 +45,7 @@ sear_body_clearance = 0.5;
 // The number of layers of plywood forming the bow.
 bow_layers = 3;
 // The thickness of each layer of plywood forming the bow.
-bow_ply_thickness = 3;
+bow_ply_thickness = body_ply_thickness;
 // The left-to-right length of the bow when assembled.
 bow_length = 200;
 // The height of the bow. This shouldn't be more than half the body_height.
