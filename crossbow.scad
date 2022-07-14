@@ -13,10 +13,16 @@ body_length = 200;
 body_height = 30;
 // The thickness of each layer of the body's plywood
 body_ply_thickness = 3;
-// How many layers of plywood laminated into the body
+// How many layers of plywood laminated into the body. This must be an odd number.
 body_layers = 5;
+if (body_layers%2 != 1) {
+    echo("body_layers must be an odd number.");
+}
 // The overall thickness of the body.
 body_thickness = body_ply_thickness * body_layers;
+// This is the thickness of the part of the body that wraps around the bow to hold it in place.
+body_bow_retain = 6;
+
 
 // Radius of the bolt fired from this crossbow. Must be less than half the material thickness of the body.
 bolt_r = body_ply_thickness/2;
@@ -42,7 +48,7 @@ bow_layers = 3;
 bow_ply_thickness = 3;
 // The left-to-right length of the bow when assembled.
 bow_length = 200;
-// The height of the bow.
+// The height of the bow. This shouldn't be more than half the body_height.
 bow_height = 15;
 // The reduction in length of each layer of the bow as a proportion of the length,
 // per layer. Think of a leaf spring.
@@ -52,11 +58,10 @@ bow_cord_tie_offset = 10;
 // This is the overall thickness of the bow at its thickest point.
 bow_thickness = bow_ply_thickness * bow_layers;
 
-
 // This is the offset between the sear and body origins
 sear_body_offset = [body_length - bolt_length, body_height - sear_r + cord_r*2, floor(body_layers/2)*body_ply_thickness];
 // This is the offset between the bow and body origins
-bow_body_offset = [body_length,body_height-bow_height,body_thickness/2];
+bow_body_offset = [body_length-body_bow_retain,body_height-bow_height,body_thickness/2];
 
 // This is the overall length of the trigger.
 trigger_length = 80;
@@ -97,6 +102,54 @@ module sear() {
 // This is the length of the cutout section around the trigger and sear mechanism.
 mechanism_cutout_x = 60;
 
+// This is the thickness of the ply used for the pins through the body.
+body_pin_ply_thickness = body_ply_thickness;
+// This is the extra width to the pin to form the head.
+body_pin_head_flange_x = 5;
+// This is the extra width to the pin to form the head.
+body_pin_head_flange_y = 4;
+// This is the width of the body pin.
+body_pin_width = 8;
+// This is the length of the slot in the end of the body pin to allow the body cross pin through.
+body_pin_slot_length = 6;
+// This is the extra length of the body pin past the cross pin slot.
+body_pin_past_slot = body_pin_head_flange_y;
+// This is the length of the cross pin that holds the body pin in place.
+body_cross_pin_length = body_ply_thickness*3;
+// This is an extra little bit of length to the body cross pin to give it more flat
+// surface to engage with the body pin before the taper starts.
+body_cross_pin_extra_flat = 1;
+// This makes the cross pin slightly tighter.
+body_cross_pin_clearance = -0.3;
+
+// These are used to pin the body together.
+module body_pin() {
+    // This is the head of the pin
+    translate([0,-body_pin_head_flange_y/2,0])
+        cube([body_pin_width + 2*body_pin_head_flange_x, body_pin_head_flange_y, body_pin_ply_thickness], center=true);
+    difference () {
+        // This is the main shaft of the pin.
+        translate([0,(body_thickness+body_pin_slot_length+body_pin_past_slot)/2,0])
+            cube([body_pin_width, body_thickness+body_pin_slot_length+body_pin_past_slot, body_pin_ply_thickness], center=true);
+        // This is the cutout for the cross-pin.
+        translate([0,body_pin_slot_length/2+body_thickness,0])
+            cube([body_pin_ply_thickness+body_cross_pin_clearance, body_pin_slot_length, body_pin_ply_thickness], center=true);
+    }
+}
+
+// This is a pin that cross-pins the body pin to lock it in place
+module body_cross_pin() {
+    // This is the head of the cross pin
+    translate([-body_pin_ply_thickness,0,0])
+        cube([body_pin_ply_thickness, body_pin_slot_length+body_pin_ply_thickness, body_pin_ply_thickness]);
+    difference() {
+        // This is the shaft of the cross-pin
+        cube([body_cross_pin_length+body_cross_pin_extra_flat, body_pin_slot_length, body_pin_ply_thickness]);
+        // This is a cut to make the cross-pin pointy and easier to go in.
+        translate([body_pin_slot_length+body_pin_ply_thickness+body_cross_pin_extra_flat,0,0]) rotate([0,0,45]) cube([100,100,100]);
+    }
+}
+
 // This is the body of the crossbow. It contains the trigger arm and the sear.
 module body() {
     difference () {
@@ -127,6 +180,14 @@ module body() {
         // This is the cutout for the bow.
         translate(bow_body_offset)
             translate([-bow_thickness,0,-body_thickness/2]) cube([bow_thickness, bow_height, body_thickness]);
+        // These are pin holes for holding the body together.
+        translate([0,body_height/2,0]) union() {
+            // TODO make the pin hole spacing more scientific.
+            translate([body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            translate([3*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            translate([body_length - 2*body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            translate([body_length - 4*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+        }
         // TODO add holes to engage with the springs for the sear and trigger.
     }
     // TODO add the bolt retention/cord guide arm.
@@ -148,15 +209,14 @@ module all_body_slices() {
 // This arm protrudes below the body and engages with the sear.
 module trigger() {
     difference() {
+        // This is the main length of the trigger.
         cube([trigger_length, trigger_height, trigger_ply_thickness]);
+        // This is the hole through the trigger for the shaft.
         translate(trigger_shaft_offset)
             cylinder(r=trigger_shaft_r, h=trigger_ply_thickness);
+        // TODO add hole to hook into the return spring.
     }
 }
-// !union() {
-//     rotate([0,0,sear_trigger_angle]) trigger();
-//     rotate([0,0,sear_trigger_angle]) translate(trigger_sear_offset) rotate([0,0,-sear_trigger_angle]) sear();
-// }
 
 // This is the bow attached to the front of the crossbow. It is bent with the tension of the cord.
 module bow() {
@@ -167,7 +227,7 @@ module bow() {
                 cube([bow_length - bow_leaf_ratio*i*bow_length, bow_height, bow_ply_thickness]);
         }
         // This is the notch cut in the top of the bow to let the bolt through.
-        translate([bow_length/2-bolt_r, bow_height-bolt_r*2+zff,-zff]) cube([bolt_r*2, bolt_r*2,100]);
+        translate([bow_length/2-bolt_r, bow_height-bolt_r+zff,-zff]) cube([bolt_r*2, bolt_r*2,100]);
         // These are the holes near the end of the bow to tie off the cord.
         translate([bow_cord_tie_offset,bow_height/2,-zff]) cylinder(r=cord_r*2, h=100);
         translate([bow_length - bow_cord_tie_offset,bow_height/2,-zff]) cylinder(r=cord_r*2, h=100);
@@ -203,23 +263,40 @@ module all_slices() {
         projection()
             sear();
     translate([0,body_layers * (body_height + laser_clearance)+bow_layers * (bow_height + laser_clearance)+laser_clearance,0]) projection() trigger();
+    translate([10,212,0]) pins();
+}
+
+// This lays out four of the body pins and body cross pins.
+module pins() {
+    projection(cut=true) {
+        for (i = [0:3]) {
+            translate([i*(body_pin_head_flange_x*2+body_pin_width+laser_clearance),0,0]) union() {
+                body_pin();
+                translate([0, 26, 0]) body_cross_pin();
+            }
+        }
+    }
 }
 
 // This shows all the parts of the crossbow assembled for visual fit checking.
 module assembled() {
-    body();
-    translate(sear_body_offset) union() {
-        sear();
-        rotate([0,0,sear_trigger_angle])
-            translate(-trigger_sear_offset)
-                trigger();
+    rotate([90,0,0]) union() {
+        body();
+        translate(sear_body_offset) union() {
+            sear();
+            rotate([0,0,sear_trigger_angle])
+                translate(-trigger_sear_offset)
+                    trigger();
+        }
+        translate(bow_body_offset) rotate([0,-90,0]) translate([-bow_length/2,0,0]) bow();
     }
-    translate(bow_body_offset) rotate([0,-90,0]) translate([-bow_length/2,0,0]) bow();
+    // TODO add the pins here.
 }
 
 
-body();
+// body();
 // bow();
 
-// all_slices();
+all_slices();
+// pins();
 // assembled();
