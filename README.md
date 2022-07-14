@@ -2,6 +2,8 @@
 
 This is a project to make a toy crossbow out of plywood on a laser cutter.
 
+![Laser cut wooden crossbow](pic.png?raw=true)
+
 ## Video
 
 https://www.youtube.com/watch?v=FJKkn_zltdg
