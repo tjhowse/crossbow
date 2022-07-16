@@ -1,10 +1,15 @@
-
 // This is a design for a laser-cut plywood crossbow.
-
+// Author: Travis Howse (tjhowse@gmail.com)
+// Website: https://github.com/tjhowse/crossbow
+// License: CC-0 1.0
+// It was built in OpenSCAD 2015.03-2. It's very old, I know, I'm lazy.
+// I'm not doing anything too funky, it should work fine in newer versions.
 
 // Z-fight fudge. Tweak dimensions this much to avoid z-fighting in the rendering.
 // This does not consequentially affect the dimensions physical product.
 zff = 0.01;
+// This sets the render output for all the pieces laid out. Set from the makefile.
+full_render = false;
 // How many facets on the circles.
 $fn = 32;
 // Length of body
