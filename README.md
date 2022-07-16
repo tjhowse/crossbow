@@ -13,9 +13,8 @@ https://www.youtube.com/watch?v=FJKkn_zltdg
 The design is currently buildable, but requires paper shims and some finesse
 to load and fire. It's currently missing:
 
-* Arm to hold the bolt in place and guide the string,
-* Spring-return for the trigger and sear,
 * More robust mechanism to keep the bow in the correct position,
+* Manufacturability improvements,
 * Cosmetics.
 
 ## Building
