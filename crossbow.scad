@@ -12,7 +12,7 @@ body_length = 200;
 // Height of body
 body_height = 30;
 // The thickness of each layer of the body's plywood
-body_ply_thickness = 3;
+body_ply_thickness = 2.85;
 // How many layers of plywood laminated into the body. This must be an odd number.
 body_layers = 5;
 if (body_layers%2 != 1) {
@@ -30,7 +30,7 @@ bolt_r = body_ply_thickness/2;
 bolt_length = 100;
 
 // The radius of the cord.
-cord_r = 1;
+cord_r = 0.5;
 // The radius of the sear wheel.
 sear_r = 10;
 // The depth of the cutout into the sear that engages with the trigger arm.
@@ -38,7 +38,7 @@ sear_trigger_notch = 3;
 // The angle the trigger arm makes to the sear.
 sear_trigger_angle = 25;
 // The radius of the shaft through the sear.
-sear_shaft_r = 1.5;
+sear_shaft_r = 2.9/2;
 // This is the clearance between the sear and the body
 sear_body_clearance = 0.5;
 
@@ -297,6 +297,6 @@ module assembled() {
 // body();
 // bow();
 
-all_slices();
+// all_slices();
 // pins();
-// assembled();
+assembled();
