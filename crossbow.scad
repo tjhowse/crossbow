@@ -83,7 +83,7 @@ laser_clearance = 0.5;
 
 // This is the thickness and width of the spring material, made from a windscreen wiper blade insert.
 // This material is used for the sear and trigger springs.
-spring_clearance = -0.1;
+spring_clearance = -0.2;
 spring_thickness = 0.778+spring_clearance;
 spring_width = 2.5;
 
@@ -91,20 +91,32 @@ spring_width = 2.5;
 sear_spring_length = 30;
 trigger_spring_length = 30;
 
-// This is the size of the cutout in the sear to engage with the sear spring.
-sear_spring_sear_cutout = sear_r/2;
-sear_spring_body_cutout_width = sear_spring_length/2;
-sear_spring_body_cutout_height = sear_spring_sear_cutout;
-sear_spring_engagement_distance = sear_spring_sear_cutout/2;
+// This is the depth of the cutout in the sear to engage with the sear spring.
+sear_spring_sear_cutout_depth = sear_r/2;
+// This is the height of the cutout in the sear to engage with the sear spring.
+sear_spring_sear_cutout_height = spring_thickness;
+// This is the width of the cutout in the body to let the sear spring flex downards
+sear_spring_body_cutout_width = sear_spring_length/3;
+// This is the height of the cutout in the body to let the sear spring flex downards
+sear_spring_body_cutout_height = sear_spring_sear_cutout_depth;
+// This is how much the sear spring engages with the sear at rest. This number is not very scientific.
+sear_spring_engagement_distance = sear_spring_sear_cutout_depth/2;
+
+// This is how much the trigger spring engages with the trigger at rest. This number is not very scientific.
 trigger_spring_engagement_distance = 5;
+// This is the width of the cutout in the body that lets the trigger spring flex downwards.
+trigger_spring_body_cutout_width = trigger_spring_length/3;
+// This is the height of the cutout in the body that lets the trigger spring flex downwards.
+trigger_spring_body_cutout_height = body_height/6;
 
-trigger_spring_body_cutout_width = trigger_spring_length/2;
-trigger_spring_body_cutout_height = 5;
 
-
+// This is the height, or thickness, of the overarm that holds the bolt in place.
 overarm_height = 5;
+// This is the overall length of the overarm.
 overarm_length = body_length/2;
+// This is the vector from the overarm origin to the body origin.
 overarm_body_offset = [body_length-bolt_length/2-overarm_length,body_height,0];
+// This is the clearance between the overarm and the sear.
 overarm_sear_clearance = 1;
 
 // This is the rotating mechanism that engages with the cord and the trigger arm to retain
@@ -122,8 +134,8 @@ module sear() {
         // The hole through the centre of the sear through which the shaft passes to secure the sear inside the body.
         cylinder(r=sear_shaft_r, h=body_ply_thickness);
         // This is a cutout in the sear to engage with the spring.
-        translate([sear_r-sear_spring_sear_cutout,-sear_spring_sear_cutout,0])
-            cube([sear_spring_sear_cutout,sear_spring_sear_cutout,body_ply_thickness]);
+        translate([sear_r-sear_spring_sear_cutout_depth,-sear_spring_sear_cutout_height,0])
+            cube([sear_spring_sear_cutout_depth,sear_spring_sear_cutout_height,body_ply_thickness]);
     }
 
 }
@@ -232,11 +244,11 @@ module body() {
         // These are pin holes for holding the body together.
         translate([0,body_height/2,0]) union() {
             // TODO make the pin hole spacing more scientific.
-            // TODO Move the front horizontal pin to the bottom so the trigger spring doesn't flex the ply downwards.
             translate([body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
             translate([3*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
             translate([body_length - 2*body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
-            translate([body_length - 4*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            // This pin is moved down and back a bit to provide support to the trigger spring mechanism.
+            translate([body_length - 4*body_length/11,-body_height/4,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
         }
     }
 
@@ -245,8 +257,12 @@ module body() {
     translate(overarm_body_offset)
         difference() {
             cube([overarm_length, overarm_height, body_thickness]);
+            // This is the cutout in the overarm to let the cord in to the sear.
             translate([overarm_length/2-cord_r*2,0,0]) cube([overarm_length/2+cord_r*2, cord_r, body_thickness]);
-            translate(-overarm_body_offset) translate(sear_body_offset) translate([0,0,-50]) cylinder(r=sear_r + overarm_sear_clearance, h=100);
+            // This is a cutout in the overarm to give clearance around the sear
+            // to make it easier to hook the cord.
+            translate(-overarm_body_offset) translate(sear_body_offset) translate([0,0,-50])
+                cylinder(r=sear_r + overarm_sear_clearance, h=100);
         }
 }
 // This is used to slice the body into layers to be laser cut.
@@ -354,6 +370,8 @@ module assembled() {
 // body();
 // bow();
 
-all_slices();
+if (full_render) {
+    render() !all_slices();
+}
 // pins();
-// assembled();
+assembled();
