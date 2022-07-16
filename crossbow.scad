@@ -236,7 +236,6 @@ module body() {
                         cube([trigger_spring_body_cutout_width, trigger_spring_body_cutout_height,body_ply_thickness]);
                 }
         }
-        // TODO make sure the sear can't rotate too far back.
 
         // This is the cutout for the bow.
         translate(bow_body_offset)
@@ -287,7 +286,6 @@ module trigger() {
         // This is the hole through the trigger for the shaft.
         translate(trigger_shaft_offset)
             cylinder(r=trigger_shaft_r, h=trigger_ply_thickness);
-        // TODO add hole to hook into the return spring.
     }
 }
 
@@ -304,10 +302,7 @@ module bow() {
         // These are the holes near the end of the bow to tie off the cord.
         translate([bow_cord_tie_offset,bow_height/2,-zff]) cylinder(r=cord_r*2, h=100);
         translate([bow_length - bow_cord_tie_offset,bow_height/2,-zff]) cylinder(r=cord_r*2, h=100);
-        // TODO Work out the best way to align the spring force of the bow with the axis of action
-        // of the bolt. Currently lots of force will go into dragging the cord along the top of the body.
-        // Perhaps make the bolt hole in the centre of the bow, and move the bow up considerbly. May need
-        // gussets to transmit force to the body.
+        // TODO Mount the bow properly without weakening the centre.
         // TODO round over the ends of the bow.
     }
 }
