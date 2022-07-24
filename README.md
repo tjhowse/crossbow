@@ -12,8 +12,7 @@ https://www.youtube.com/watch?v=FJKkn_zltdg
 
 ## Project status
 
-The design is currently buildable, but requires paper shims and some finesse
-to load and fire. It's currently missing:
+The design is finished, but there is some scope for improvement:
 
 * Wood-based alternative to the trigger and sear pivot points,
 * Cosmetics.
