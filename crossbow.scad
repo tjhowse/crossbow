@@ -35,7 +35,7 @@ bolt_r = body_ply_thickness/2;
 bolt_length = 100;
 
 // The radius of the cord.
-cord_r = 0.5;
+cord_r = 0.75;
 // The radius of the sear wheel.
 sear_r = 10;
 // The depth of the cutout into the sear that engages with the trigger arm.
@@ -43,7 +43,7 @@ sear_trigger_notch = 3;
 // The angle the trigger arm makes to the sear.
 sear_trigger_angle = 25;
 // The radius of the shaft through the sear.
-sear_shaft_r = 2.9/2;
+sear_shaft_r = 2.8/2;
 // This is the clearance between the sear and the body
 sear_body_clearance = 0.5;
 
@@ -54,7 +54,7 @@ bow_ply_thickness = body_ply_thickness;
 // The left-to-right length of the bow when assembled.
 bow_length = 200;
 // The height of the bow. This shouldn't be more than half the body_height.
-bow_height = 15;
+bow_height = 20;
 // The reduction in length of each layer of the bow as a proportion of the length,
 // per layer. Think of a leaf spring.
 bow_leaf_ratio = 0.3;
@@ -101,11 +101,13 @@ sear_spring_sear_cutout_depth = sear_r/2;
 // This is the height of the cutout in the sear to engage with the sear spring.
 sear_spring_sear_cutout_height = spring_thickness;
 // This is the width of the cutout in the body to let the sear spring flex downards
-sear_spring_body_cutout_width = sear_spring_length/3;
+sear_spring_body_cutout_width = sear_spring_length/2;
 // This is the height of the cutout in the body to let the sear spring flex downards
 sear_spring_body_cutout_height = sear_spring_sear_cutout_depth;
 // This is how much the sear spring engages with the sear at rest. This number is not very scientific.
 sear_spring_engagement_distance = sear_spring_sear_cutout_depth/2;
+sear_spring_edge = 1;
+sear_spring_cutout_void_r = 2.5;
 
 // This is how much the trigger spring engages with the trigger at rest. This number is not very scientific.
 trigger_spring_engagement_distance = 5;
@@ -139,8 +141,10 @@ module sear() {
         // The hole through the centre of the sear through which the shaft passes to secure the sear inside the body.
         cylinder(r=sear_shaft_r, h=body_ply_thickness);
         // This is a cutout in the sear to engage with the spring.
-        translate([sear_r-sear_spring_sear_cutout_depth,-sear_spring_sear_cutout_height,0])
+        translate([sear_r-sear_spring_sear_cutout_depth,-sear_spring_sear_cutout_height,0]) union() {
             cube([sear_spring_sear_cutout_depth,sear_spring_sear_cutout_height,body_ply_thickness]);
+            translate([sear_r/2-sear_spring_cutout_void_r-sear_spring_edge,0,0]) cylinder(r=sear_spring_cutout_void_r, h=body_ply_thickness);
+        }
     }
 
 }
@@ -167,6 +171,15 @@ body_cross_pin_length = body_ply_thickness*3;
 body_cross_pin_extra_flat = 1;
 // This makes the cross pin slightly tighter.
 body_cross_pin_clearance = -0.3;
+
+// This is the width of the ziptie post used to clamp the bow in place
+body_ziptie_post_width = 5;
+// This is the width
+body_ziptie_post_height = 6;
+// This is the height of the notch to position the ziptie.
+body_ziptie_post_notch_height = 2;
+// This is the depth of the ziptie notch.
+body_ziptie_post_notch_width = 1;
 
 // These are used to pin the body together.
 module body_pin() {
@@ -195,7 +208,6 @@ module body_cross_pin() {
         translate([body_pin_slot_length+body_pin_ply_thickness+body_cross_pin_extra_flat,0,0]) rotate([0,0,45]) cube([100,100,100]);
     }
 }
-
 
 // This is the body of the crossbow. It contains the trigger arm and the sear.
 module body() {
@@ -249,11 +261,29 @@ module body() {
         translate([0,body_height/2,0]) union() {
             // TODO make the pin hole spacing more scientific.
             translate([body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
-            translate([3*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            // translate([3*body_length/16,0,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
+            translate([4*body_length/12,body_height/4,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
             translate([body_length - 2*body_length/16,0,0]) rotate([0,0,0]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
             // This pin is moved down and back a bit to provide support to the trigger spring mechanism.
             translate([body_length - 4*body_length/11,-body_height/4,0]) rotate([0,0,90]) cube([body_pin_ply_thickness, body_pin_width, 100], center=true);
         }
+    }
+    // These are four posts for holding zip ties that clamp the bow in place.
+    translate(bow_body_offset) difference() {
+        // These are the posts themelves.
+        union() {
+            translate([body_ziptie_post_width/2,bow_height+body_ziptie_post_height/2,0])
+                cube([body_ziptie_post_width, body_ziptie_post_height, body_thickness],center=true);
+            translate([-bow_thickness-body_ziptie_post_width/2,bow_height+body_ziptie_post_height/2,0])
+                cube([body_ziptie_post_width, body_ziptie_post_height, body_thickness],center=true);
+        }
+        // This is a cutout to let the bolt through.
+        cube([100,100,body_ply_thickness],center=true);
+        // These are notches in the front and rear of the posts to keep the ziptie in place.
+        translate([body_ziptie_post_width-body_ziptie_post_notch_width/2,bow_height+body_ziptie_post_height/2,0])
+            cube([body_ziptie_post_notch_width,body_ziptie_post_notch_height,100],center=true);
+        translate([-bow_thickness-body_ziptie_post_width+body_ziptie_post_notch_width/2,bow_height+body_ziptie_post_height/2,0])
+            cube([body_ziptie_post_notch_width,body_ziptie_post_notch_height,100],center=true);
     }
 
     // This is the arm over the top of the sear and bolt that holds the bolt in place
@@ -279,7 +309,7 @@ module body_slice(layer) {
 // This lays out all the slices of the body side by side for laser cutting.
 module all_body_slices() {
     for (i = [0:body_layers-1]) {
-        translate([0,i*(body_height+laser_clearance + overarm_height),0]) body_slice(i);
+        translate([0,i*(body_height+laser_clearance + max(overarm_height, body_ziptie_post_height)),0]) body_slice(i);
     }
 }
 
@@ -330,13 +360,13 @@ module all_bow_slices() {
 // This layout is a bit shambolic.
 module all_slices() {
     all_body_slices();
-    translate([0,body_layers * (body_height + overarm_height + laser_clearance)+laser_clearance,0])
+    translate([0,body_layers * (body_height + max(overarm_height, body_ziptie_post_height) + laser_clearance)+laser_clearance,0])
         all_bow_slices();
-    translate([sear_r, body_layers * (body_height + overarm_height + laser_clearance)+laser_clearance+sear_r+bow_height,0])
+    translate([sear_r, body_layers * (body_height + max(overarm_height, body_ziptie_post_height) + laser_clearance)+laser_clearance+sear_r+bow_height,0])
         projection()
             sear();
-    translate([0,body_layers * (body_height + overarm_height + laser_clearance)+bow_layers * (bow_height + laser_clearance)+laser_clearance,0]) projection() trigger();
-    translate([10,238,0]) pins();
+    translate([0,body_layers * (body_height + max(overarm_height, body_ziptie_post_height) + laser_clearance)+bow_layers * (bow_height + laser_clearance)+laser_clearance,0]) projection() trigger();
+    translate([10,body_layers * (body_height + max(overarm_height, body_ziptie_post_height) + laser_clearance)+bow_layers * (bow_height + laser_clearance)+laser_clearance+trigger_height+body_pin_head_flange_y+laser_clearance,0]) pins();
 }
 
 // This lays out four of the body pins and body cross pins.
@@ -369,7 +399,7 @@ module assembled() {
 
 // body();
 // bow();
-
+full_render = true;
 if (full_render) {
     render() !all_slices();
 }
